@@ -7,6 +7,14 @@ var config = {
   multipartBoundary: `multipart-${Math.random()}`,
 };
 
+const agent = req => {
+  const agent = req.headers['user-agent'] || '';
+  if (agent.includes('Chrome')) return 'chrome';
+  if (agent.includes('Safari')) return 'safari';
+  if (agent.includes('Firefox')) return 'firefox';
+  return agent;
+};
+
 async function main() {
   const {Hyperdrive, close: close} = await SDK({persist: false, storage: null});
 
@@ -26,29 +34,29 @@ async function main() {
     };
 
     const handleClose = function () {
-      console.log('Page closed:', req.headers);
+      console.log('Page closed:', agent(req));
       if (watch) {
-        console.log('stoping watch /');
+        console.log('UNWATCH /: ', agent(req));
         watch.destroy();
       }
     };
 
-    const sendFrame = content => {
+    const sendFrame = html => {
       if (sending) return;
       sending = true;
 
-      const html =
-        content || `<h1>randomness</h1><pre>${Math.random()}</pre>\r\n\r\n`;
+      console.log('SEND: ', agent(req));
+
+      res.write('\r\n');
+      res.write('--' + config.multipartBoundary + '\r\n');
 
       res.write('Content-Type: text/html\r\n');
       res.write('Content-Length: ' + html.length + '\r\n');
       res.write('\r\n');
       res.write(html);
 
-      res.write('--' + config.multipartBoundary + '\r\n');
       res.write('\r\n');
       res.write('--' + config.multipartBoundary + '\r\n');
-
       sending = false;
     };
 
@@ -73,9 +81,10 @@ async function main() {
         'Content-Type':
           'multipart/x-mixed-replace; boundary=--' + config.multipartBoundary,
       });
-      res.write('--' + config.multipartBoundary + '\r\n');
+      res.write('\r\n');
     };
-    console.log('watchering /');
+
+    console.log('WATCH /: ', agent(req));
 
     watch = drive.watch('/', () => {
       console.log('Change detected', drive.version);
@@ -104,7 +113,7 @@ async function main() {
   };
 
   function handleRequest(req, res) {
-    console.log('GET', req.url);
+    console.log('GET', req.url, agent(req));
     switch (req.url) {
       case '/':
       case '/index.html':
