@@ -1,0 +1,37 @@
+<html>
+  <body>
+    <script type="text/javascript">
+      const goLive = () => {
+        const url = `ws://${window.location.hostname}:8080`;
+        const conn = new WebSocket(url);
+
+        const show = html => {
+          document.open();
+          document.write(html);
+          document.close();
+        };
+
+        conn.onopen = () => {
+          conn.send({subscribe: '/index.html'});
+        };
+
+        conn.onerror = error => {
+          show(`WebSocket error: ${error}`);
+          setTimeout(goLive, 10000);
+        };
+
+        conn.onclose = function (e) {
+          show('websocket closed');
+          setTimeout(goLive, 10000);
+        };
+
+        conn.onmessage = ({data}) => {
+          const msg = JSON.parse(data);
+          show(msg.html);
+        };
+      };
+
+      goLive();
+    </script>
+  </body>
+</html>

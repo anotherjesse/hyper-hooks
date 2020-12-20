@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "dat-sdk": "^2.8.1"
+    "dat-sdk": "^2.8.1",
+    "ws": "^7.4.1"
   }
 }
